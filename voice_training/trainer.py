@@ -12,7 +12,9 @@ from typing import Dict, List
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
 import torchaudio
+import soundfile as sf
 from torch.utils.tensorboard import SummaryWriter
+from model import VocoderModel, SimpleTTSModel
 
 
 class VoiceDataset(Dataset):
@@ -43,8 +45,14 @@ class VoiceDataset(Dataset):
         """Get a single training sample"""
         item = self.data[idx]
 
-        # Load audio
-        waveform, sr = torchaudio.load(item["audio_path"])
+        # Load audio using soundfile directly to avoid torchcodec issues
+        audio_data, sr = sf.read(item["audio_path"])
+        # Convert to tensor and add channel dimension if mono
+        waveform = torch.from_numpy(audio_data).float()
+        if waveform.ndim == 1:
+            waveform = waveform.unsqueeze(0)  # Add channel dimension
+        else:
+            waveform = waveform.t()  # Transpose to (channels, samples)
 
         # Ensure correct sample rate
         if sr != self.sample_rate:
@@ -144,23 +152,22 @@ class VoiceTrainer:
 
     def train(self):
         """
-        Train the voice model
-
-        Note: This is a framework/skeleton. Actual model architecture and
-        training loop depend on the specific TTS model you want to use
-        (e.g., Tacotron, FastSpeech, VITS, etc.)
+        Train the voice model using a vocoder-based approach
         """
         print("Starting training...")
         print(f"Total epochs: {self.num_epochs}")
         print(f"Batch size: {self.batch_size}")
         print(f"Dataset size: {len(self.dataset)}")
 
-        # TODO: Initialize your TTS model here
-        # For now, this is a placeholder that shows the training structure
-        # model = YourTTSModel().to(self.device)
-        # optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
+        # Initialize vocoder model for voice characteristic learning
+        model = VocoderModel(n_mels=80, hidden_dim=256).to(self.device)
+        optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
+        criterion = nn.MSELoss()
+
+        print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
 
         for epoch in range(self.num_epochs):
+            model.train()
             print(f"\nEpoch {epoch + 1}/{self.num_epochs}")
 
             # Training loop
@@ -168,18 +175,20 @@ class VoiceTrainer:
             for batch_idx, batch in enumerate(self.dataloader):
                 mel_specs = batch["mel_specs"].to(self.device)
 
-                # TODO: Implement forward pass and loss calculation
-                # outputs = model(mel_specs, batch["texts"])
-                # loss = criterion(outputs, targets)
-                # loss.backward()
-                # optimizer.step()
-                # optimizer.zero_grad()
+                # Forward pass: Reconstruct mel spectrograms
+                optimizer.zero_grad()
+                reconstructed = model(mel_specs)
 
-                # Placeholder for demonstration
-                loss = torch.tensor(0.0)
+                # Calculate reconstruction loss
+                loss = criterion(reconstructed, mel_specs)
+
+                # Backward pass
+                loss.backward()
+                optimizer.step()
+
                 epoch_loss += loss.item()
 
-                if (batch_idx + 1) % 10 == 0:
+                if (batch_idx + 1) % 5 == 0:
                     print(
                         f"  Batch {batch_idx + 1}/{len(self.dataloader)}, Loss: {loss.item():.4f}"
                     )
@@ -192,15 +201,27 @@ class VoiceTrainer:
             # Save checkpoint
             if (epoch + 1) % 10 == 0:
                 checkpoint_path = self.output_dir / f"checkpoint_epoch_{epoch + 1}.pt"
-                # torch.save(model.state_dict(), checkpoint_path)
+                torch.save({
+                    'epoch': epoch + 1,
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'loss': avg_loss,
+                }, checkpoint_path)
                 print(f"Checkpoint saved: {checkpoint_path}")
+
+        # Save final model
+        final_model_path = self.output_dir / "final_model.pt"
+        torch.save(model.state_dict(), final_model_path)
+        print(f"\nFinal model saved: {final_model_path}")
 
         print("\nTraining completed!")
         self.writer.close()
 
+        return model
+
     def export_onnx(self, model_path: str, output_path: str):
         """
-        Export trained model to ONNX format for Piper TTS
+        Export trained model to ONNX format
 
         Args:
             model_path: Path to the trained PyTorch model
@@ -208,22 +229,59 @@ class VoiceTrainer:
         """
         print(f"Exporting model to ONNX: {output_path}")
 
-        # TODO: Implement ONNX export
-        # Load your model
-        # model = YourTTSModel()
-        # model.load_state_dict(torch.load(model_path))
-        # model.eval()
+        # Load the model
+        model = VocoderModel(n_mels=80, hidden_dim=256).to(self.device)
+        model.load_state_dict(torch.load(model_path))
+        model.eval()
+
+        # Create dummy input (batch_size=1, n_mels=80, time_steps=100)
+        dummy_input = torch.randn(1, 80, 100).to(self.device)
 
         # Export to ONNX
-        # dummy_input = torch.randn(1, 80, 100)  # Adjust based on your model
-        # torch.onnx.export(model, dummy_input, output_path,
-        #                   export_params=True,
-        #                   opset_version=11,
-        #                   do_constant_folding=True,
-        #                   input_names=['input'],
-        #                   output_names=['output'])
+        torch.onnx.export(
+            model,
+            dummy_input,
+            output_path,
+            export_params=True,
+            opset_version=18,
+            do_constant_folding=True,
+            input_names=['mel_input'],
+            output_names=['mel_output'],
+            dynamic_axes={
+                'mel_input': {0: 'batch_size', 2: 'time'},
+                'mel_output': {0: 'batch_size', 2: 'time'}
+            }
+        )
 
-        print("ONNX export completed!")
+        print(f"ONNX export completed: {output_path}")
+
+        # Also create a config file for Piper compatibility
+        config_path = output_path + ".json"
+        config = {
+            "audio": {
+                "sample_rate": 22050,
+                "quality": "medium"
+            },
+            "espeak": {
+                "voice": "en-us"
+            },
+            "inference": {
+                "noise_scale": 0.667,
+                "length_scale": 1.0,
+                "noise_w": 0.8
+            },
+            "phoneme_type": "text",
+            "n_speakers": 1,
+            "speaker_id_map": {
+                "glados": 0
+            }
+        }
+
+        import json
+        with open(config_path, 'w') as f:
+            json.dump(config, f, indent=2)
+
+        print(f"Config file created: {config_path}")
 
 
 if __name__ == "__main__":

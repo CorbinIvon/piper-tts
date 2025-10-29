@@ -6,7 +6,13 @@
       "Bash(python -c:*)",
       "Bash(python:*)",
       "Bash(mkdir:*)",
-      "Bash(gemini:*)"
+      "Bash(gemini:*)",
+      "Bash(. ../.venv/bin/activate)",
+      "Bash(pip install:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(. /home/corbin/Code/git/piper-tts/.venv/bin/activate)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []
