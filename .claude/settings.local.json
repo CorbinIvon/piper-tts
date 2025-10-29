@@ -4,7 +4,9 @@
       "Bash(. .venv/bin/activate)",
       "Bash(python3 -m pip:*)",
       "Bash(python -c:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(mkdir:*)",
+      "Bash(gemini:*)"
     ],
     "deny": [],
     "ask": []
