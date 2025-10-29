@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(. .venv/bin/activate)",
-      "Bash(python3 -m pip:*)"
+      "Bash(python3 -m pip:*)",
+      "Bash(python -c:*)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []

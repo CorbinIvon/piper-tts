@@ -25,15 +25,18 @@ python3 -m pip install -r requirements.txt
 ### 2. Download a Pre-trained Voice
 
 ```bash
-# Download an English voice model
-wget https://github.com/rhasspy/piper/releases/download/v1.0.0/voice-en-us-lessac-medium.tar.gz
-tar -xzf voice-en-us-lessac-medium.tar.gz
+# Create voice_data directory and download an English voice model (bryce medium quality)
+mkdir -p voice_data
+cd voice_data
+wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/bryce/medium/en_US-bryce-medium.onnx
+wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/bryce/medium/en_US-bryce-medium.onnx.json
+cd ..
 ```
 
 ### 3. Generate Speech
 
 ```bash
-python hello_world_tts.py "Hello World" output.wav en-us-lessac-medium.onnx
+python hello_world_tts.py "Hello World" output.wav voice_data/en_US-bryce-medium.onnx
 ```
 
 ## Train Your Own Voice
