@@ -1,57 +1,24 @@
-# Voice Training Guide for Piper TTS
+# Voice Training Guide
 
-This guide explains how to train custom voice models and use them with Piper TTS to simulate your own voice.
-
-## Overview
-
-This project provides a complete framework for:
-1. Processing audio recordings of your voice
-2. Preparing training data
-3. Training a custom voice model
-4. Using your custom voice with Piper TTS
+This guide explains how to train custom voice models for Piper TTS.
 
 ## Prerequisites
 
-- Python 3.9 or higher
-- Audio recordings of your voice (at least 30 minutes recommended, 1+ hour ideal)
-- A GPU is highly recommended for training (but not required for inference)
+Before starting, ensure:
+- Project is set up (see main README.md)
+- Virtual environment is activated: `. .venv/bin/activate`
+- You have audio recordings ready (at least 30 minutes recommended, 1+ hour ideal)
+- GPU is available for training (highly recommended but not required)
 
-## Installation
+## Training Workflow Overview
 
-1. Activate the virtual environment:
-```bash
-. .venv/bin/activate
-```
+1. Prepare audio recordings
+2. Process audio data
+3. Train voice model
+4. Export to ONNX format
+5. Use your custom voice
 
-2. Install dependencies:
-```bash
-python3 -m pip install -r requirements.txt
-```
-
-## Quick Start: Using Piper TTS
-
-Before training your own voice, test the system with pre-trained models.
-
-### Download a Pre-trained Voice Model
-
-Download a voice model from the [Piper releases page](https://github.com/rhasspy/piper/releases/tag/v1.0.0).
-
-Example:
-```bash
-# Download English US voice
-wget https://github.com/rhasspy/piper/releases/download/v1.0.0/voice-en-us-lessac-medium.tar.gz
-tar -xzf voice-en-us-lessac-medium.tar.gz
-```
-
-### Generate Speech
-
-```bash
-python hello_world_tts.py "Hello World" output.wav path/to/model.onnx
-```
-
-## Training Your Own Voice Model
-
-### Step 1: Prepare Your Audio Data
+## Step 1: Prepare Your Audio Data
 
 Collect audio recordings of your voice. For best results:
 
@@ -116,7 +83,7 @@ The script will display statistics about your processed dataset:
 }
 ```
 
-### Step 3 (Optional): Add Transcriptions
+## Step 3 (Optional): Add Transcriptions
 
 For better training results, provide text transcriptions of your audio.
 
@@ -134,7 +101,7 @@ Then run with transcriptions:
 python voice_training/data_preparation.py my_voice_recordings/ my_voice --transcriptions transcriptions.json
 ```
 
-### Step 4: Train Your Voice Model
+## Step 4: Train Your Voice Model
 
 ```bash
 python voice_training/trainer.py training_data/manifest.jsonl models/my_voice
@@ -158,7 +125,7 @@ tensorboard --logdir models/my_voice/logs
 
 Open http://localhost:6006 in your browser to view training metrics.
 
-### Step 5: Export to ONNX
+## Step 5: Export to ONNX
 
 Once training is complete, export your model to ONNX format for use with Piper:
 

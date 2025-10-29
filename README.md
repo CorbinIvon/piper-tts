@@ -36,40 +36,22 @@ cd ..
 ### 3. Generate Speech
 
 ```bash
-python hello_world_tts.py "Hello World" voice_data/en_US-bryce-medium.onnx
+python sample_tts.py "Hello World" voice_data/en_US-bryce-medium.onnx
 ```
 
 Output will be saved to `output/<timestamp>_output.wav` (e.g., `output/20251028_202901_output.wav`)
 
 ## Train Your Own Voice
 
-See [VOICE_TRAINING_GUIDE.md](VOICE_TRAINING_GUIDE.md) for complete instructions on:
-
-1. Recording and preparing audio data
-2. Processing audio for training
-3. Training a custom voice model
-4. Using your trained voice with Piper TTS
-
-**Quick training workflow:**
-
-```bash
-# 1. Prepare your audio data
-python voice_training/data_preparation.py my_recordings/ my_voice
-
-# 2. Train the model
-python voice_training/trainer.py training_data/manifest.jsonl models/my_voice
-
-# 3. Use your custom voice
-python hello_world_tts.py "Testing my voice!" models/my_voice/my_voice.onnx
-```
+Want to create a custom voice? See the [Voice Training Guide](voice_training/VOICE_TRAINING_GUIDE.md) for complete instructions on training custom voice models.
 
 ## Project Structure
 
-- `hello_world_tts.py` - Simple TTS script for testing
+- `sample_tts.py` - Simple TTS script for testing
 - `voice_training/` - Voice training modules
   - `data_preparation.py` - Audio preprocessing and dataset creation
   - `trainer.py` - Model training framework
-- `VOICE_TRAINING_GUIDE.md` - Comprehensive training guide
+  - `VOICE_TRAINING_GUIDE.md` - Comprehensive training guide
 - `requirements.txt` - Python dependencies
 
 ## Requirements
@@ -81,7 +63,7 @@ python hello_world_tts.py "Testing my voice!" models/my_voice/my_voice.onnx
 
 ## Documentation
 
-- [Voice Training Guide](VOICE_TRAINING_GUIDE.md) - Complete guide for training custom voices
+- [Voice Training Guide](voice_training/VOICE_TRAINING_GUIDE.md) - Complete guide for training custom voices
 - [Piper TTS Documentation](https://github.com/rhasspy/piper) - Official Piper TTS docs
 
 ## Technologies
