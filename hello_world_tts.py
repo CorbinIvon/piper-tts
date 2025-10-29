@@ -83,9 +83,14 @@ if __name__ == "__main__":
         # One argument: text only
         text = sys.argv[1]
         model = None
-    else:
-        # Two+ arguments: text and model
+    elif len(sys.argv) == 3:
+        # Two arguments: text and model (output path ignored)
         text = sys.argv[1]
         model = sys.argv[2]
+    else:
+        # Three+ arguments: text, (ignored output), and model
+        text = sys.argv[1]
+        # sys.argv[2] is ignored (old output path argument)
+        model = sys.argv[3]
 
     text_to_speech(text, output, model)

@@ -36,8 +36,10 @@ cd ..
 ### 3. Generate Speech
 
 ```bash
-python hello_world_tts.py "Hello World" output.wav voice_data/en_US-bryce-medium.onnx
+python hello_world_tts.py "Hello World" voice_data/en_US-bryce-medium.onnx
 ```
+
+Output will be saved to `output/<timestamp>_output.wav` (e.g., `output/20251028_202901_output.wav`)
 
 ## Train Your Own Voice
 
@@ -58,7 +60,7 @@ python voice_training/data_preparation.py my_recordings/ my_voice
 python voice_training/trainer.py training_data/manifest.jsonl models/my_voice
 
 # 3. Use your custom voice
-python hello_world_tts.py "Testing my voice!" output.wav models/my_voice/my_voice.onnx
+python hello_world_tts.py "Testing my voice!" models/my_voice/my_voice.onnx
 ```
 
 ## Project Structure
