@@ -1,0 +1,12 @@
+piper-tts
+onnxruntime
+numpy
+torch
+torchaudio
+librosa
+soundfile
+pydub
+scipy
+matplotlib
+tensorboard
+jsonlines
